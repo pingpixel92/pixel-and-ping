@@ -1,0 +1,194 @@
+@import "tailwindcss";
+
+/* ───────────────────────── Pixel & Ping design tokens (Baseline palette) ───────────────────────── */
+
+:root {
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+
+  --brand: #2563c9;
+  --brand-deep: #0f2f63;
+  --brand-light: #5790e6;
+
+  --accent-teal: #0b6e97;
+
+  --surface: #f4f4f4;
+  --surface-card: #ffffff;
+
+  --ink: #0a0a0a;
+  --ink-soft: #717784;
+
+  --ghost: #d7dae1;
+  --hairline: #e6e8ec;
+
+  --on-brand: #ffffff;
+
+  --navy-900: #071a36;
+  --navy-800: #0f2f63;
+  --navy-700: #102f59;
+  --navy-600: #173b6d;
+
+  --danger: #dc2626;
+  --warning: #b45309;
+
+  --shadow-card: 0 1px 2px rgb(10 26 54 / 0.04), 0 8px 24px -16px rgb(10 26 54 / 0.18);
+  --shadow-pop: 0 24px 64px -24px rgb(7 26 54 / 0.35);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-brand: var(--brand);
+  --color-brand-deep: var(--brand-deep);
+  --color-brand-light: var(--brand-light);
+  --color-teal: var(--accent-teal);
+  --color-surface: var(--surface);
+  --color-surface-card: var(--surface-card);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ghost: var(--ghost);
+  --color-hairline: var(--hairline);
+  --color-on-brand: var(--on-brand);
+  --color-navy-900: var(--navy-900);
+  --color-navy-800: var(--navy-800);
+  --color-navy-700: var(--navy-700);
+  --color-navy-600: var(--navy-600);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+
+  --font-sans: "Onest", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --radius-card: 16px;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--background);
+  color: var(--ink);
+  font-feature-settings: "ss01", "cv05";
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--brand) 18%, white);
+  color: var(--ink);
+}
+
+/* Focus visibility — keyboard first */
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Slim, premium scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ghost) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--ghost);
+  border-radius: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ───────────────────────── Shared primitives ───────────────────────── */
+
+.card {
+  background: var(--surface-card);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  letter-spacing: -0.01em;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.input-base {
+  width: 100%;
+  background: var(--surface-card);
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.875rem;
+  color: var(--ink);
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+.input-base::placeholder {
+  color: var(--ink-soft);
+}
+.input-base:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 14%, transparent);
+}
+.input-base:disabled {
+  background: var(--surface);
+  color: var(--ink-soft);
+}
+
+/* Pixel grid texture for navy panels */
+.pixel-grid {
+  background-image:
+    linear-gradient(color-mix(in srgb, white 6%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, white 6%, transparent) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+/* Ping radar rings */
+@keyframes ping-ring {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+.ping-ring::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 1.5px solid var(--brand);
+  animation: ping-ring 2.2s cubic-bezier(0.2, 0.6, 0.4, 1) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ping-ring::after {
+    animation: none;
+    opacity: 0;
+  }
+}

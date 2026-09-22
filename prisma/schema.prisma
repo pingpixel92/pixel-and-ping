@@ -1,0 +1,407 @@
+// Pixel & Ping — Database schema (PostgreSQL)
+// Conventions: UTC timestamps, cuid() primary keys, FK constraints, indexed hot paths.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ───────────────────────── Enums ─────────────────────────
+
+enum Role {
+  ADMIN
+  OPERATOR
+  VIEWER
+}
+
+enum AccountStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum ResourceStatus {
+  UNKNOWN
+  ONLINE
+  OFFLINE
+  CHECKING
+}
+
+enum ProxyProtocol {
+  VLESS
+  VMESS
+  TROJAN
+  SHADOWSOCKS
+  HTTPS
+  HTTP
+  TCP
+}
+
+enum VpnUserStatus {
+  ACTIVE
+  DISABLED
+  EXPIRED
+}
+
+enum LogLevel {
+  DEBUG
+  INFO
+  WARN
+  ERROR
+}
+
+enum NotificationType {
+  SYSTEM
+  EXPIRY
+  HEALTH
+  INTEGRATION
+}
+
+enum HealthTarget {
+  SERVER
+  ENDPOINT
+  PORT
+  DATABASE
+  API
+  FAILOVER
+}
+
+enum FailoverState {
+  NOT_CHECKED
+  CONFIGURED
+  HEALTHY
+  FAILED
+}
+
+// ───────────────────────── Panel accounts & sessions ─────────────────────────
+
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  username     String        @unique
+  displayName  String
+  passwordHash String
+  role         Role          @default(VIEWER)
+  status       AccountStatus @default(ACTIVE)
+  lastLoginAt  DateTime?
+  prefs        Json          @default("{}")
+  totpEnabled  Boolean       @default(false)
+  totpSecret   String?       // encrypted at rest — never returned by the API
+  sessions     Session[]
+  apiKeys      ApiKey[]
+  vpnUsers     VpnUser[]
+  auditLogs    AuditLog[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([status])
+}
+
+model Session {
+  id         String   @id @default(cuid())
+  tokenHash  String   @unique
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ip         String?
+  userAgent  String?
+  expiresAt  DateTime
+  lastSeenAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// ───────────────────────── Infrastructure ─────────────────────────
+
+model Server {
+  id          String         @id @default(cuid())
+  name        String         @unique
+  host        String
+  ip          String?
+  provider    String?
+  location    String?
+  notes       String?
+  status      ResourceStatus @default(UNKNOWN)
+  latencyMs   Int?
+  lastCheckAt DateTime?
+  lastError   String?
+  endpoints   Endpoint[]
+  ports       Port[]
+  vpnUsers    VpnUser[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([status])
+}
+
+model Endpoint {
+  id            String         @id @default(cuid())
+  name          String
+  address       String
+  port          Int
+  protocol      ProxyProtocol
+  tls           Boolean        @default(true)
+  sni           String?
+  enabled       Boolean        @default(true)
+  status        ResourceStatus @default(UNKNOWN)
+  latencyMs     Int?
+  lastCheckAt   DateTime?
+  lastError     String?
+  serverId      String?
+  server        Server?        @relation(fields: [serverId], references: [id], onDelete: SetNull)
+  vpnUsers      VpnUser[]
+  primaryOf     FailoverRule[] @relation("failoverPrimary")
+  backupOf      FailoverRule[] @relation("failoverBackup")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([serverId])
+  @@index([status])
+}
+
+model Port {
+  id          String         @id @default(cuid())
+  number      Int
+  protocol    ProxyProtocol
+  tls         Boolean        @default(true)
+  note        String?
+  status      ResourceStatus @default(UNKNOWN)
+  latencyMs   Int?
+  lastCheckAt DateTime?
+  serverId    String?
+  server      Server?        @relation(fields: [serverId], references: [id], onDelete: SetNull)
+  vpnUsers    VpnUser[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@unique([serverId, number, protocol])
+  @@index([status])
+}
+
+// ───────────────────────── Managed (VPN) users ─────────────────────────
+
+model VpnUser {
+  id               String         @id @default(cuid())
+  username         String         @unique
+  displayName      String?
+  email            String?
+  status           VpnUserStatus  @default(ACTIVE)
+  protocol         ProxyProtocol
+  credentials      Json?          // provider-generated secrets — never logged
+  config           String?        // generated proxy config URI
+  configUpdatedAt  DateTime?
+  expiresAt        DateTime?      // null = unlimited
+  trafficLimitBytes BigInt?       // null = unlimited
+  usedBytes        BigInt         @default(0)
+  notes            String?
+  serverId         String?
+  endpointId       String?
+  portId           String?
+  createdById      String?
+  createdBy        User?          @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  server           Server?        @relation(fields: [serverId], references: [id], onDelete: SetNull)
+  endpoint         Endpoint?      @relation(fields: [endpointId], references: [id], onDelete: SetNull)
+  port             Port?          @relation(fields: [portId], references: [id], onDelete: SetNull)
+  configs          Config[]
+  trafficRecords   TrafficRecord[]
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@index([status])
+  @@index([expiresAt])
+  @@index([serverId])
+}
+
+model Config {
+  id        String        @id @default(cuid())
+  name      String
+  protocol  ProxyProtocol
+  content   String
+  vpnUserId String?
+  vpnUser   VpnUser?      @relation(fields: [vpnUserId], references: [id], onDelete: Cascade)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([vpnUserId])
+}
+
+// ───────────────────────── Cloudflare ─────────────────────────
+
+model CloudflareAccount {
+  id             String           @id @default(cuid())
+  name           String           @default("Cloudflare")
+  tokenCipher    String           // AES-256-GCM encrypted API token
+  tokenHash      String           @unique // sha256 — duplicate-token detection only
+  accountId      String?
+  verified       Boolean          @default(false)
+  lastVerifiedAt DateTime?
+  zones          CloudflareZone[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+}
+
+model CloudflareZone {
+  id        String            @id @default(cuid())
+  zoneId    String            @unique
+  name      String
+  status    String
+  accountId String
+  account   CloudflareAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  records   Json?
+  fetchedAt DateTime?
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  @@index([accountId])
+}
+
+// ───────────────────────── Traffic & analytics ─────────────────────────
+
+model TrafficRecord {
+  id         String   @id @default(cuid())
+  at         DateTime @default(now())
+  vpnUserId  String?
+  vpnUser    VpnUser? @relation(fields: [vpnUserId], references: [id], onDelete: SetNull)
+  serverId   String?
+  endpointId String?
+  bytesIn    BigInt   @default(0)
+  bytesOut   BigInt   @default(0)
+  requests   Int      @default(0)
+  source     String   @default("ingest")
+
+  @@index([at])
+  @@index([vpnUserId])
+}
+
+model AnalyticsEvent {
+  id      String   @id @default(cuid())
+  at      DateTime @default(now())
+  type    String
+  level   LogLevel @default(INFO)
+  source  String   @default("api")
+  message String?
+  meta    Json?
+
+  @@index([at])
+  @@index([type])
+  @@index([type, at])
+}
+
+// ───────────────────────── Logs, notifications, settings ─────────────────────────
+
+model LogEntry {
+  id           String   @id @default(cuid())
+  at           DateTime @default(now())
+  level        LogLevel @default(INFO)
+  action       String
+  actor        String?
+  userId       String?
+  resourceType String?
+  resourceId   String?
+  message      String
+  ip           String?
+  meta         Json?
+
+  @@index([at])
+  @@index([level])
+  @@index([action])
+}
+
+model Notification {
+  id           String           @id @default(cuid())
+  type         NotificationType @default(SYSTEM)
+  title        String
+  message      String
+  read         Boolean          @default(false)
+  readAt       DateTime?
+  dedupeKey    String?          @unique
+  resourceType String?
+  resourceId   String?
+  createdAt    DateTime         @default(now())
+
+  @@index([read])
+  @@index([createdAt])
+}
+
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+// ───────────────────────── API keys ─────────────────────────
+
+model ApiKey {
+  id          String    @id @default(cuid())
+  name        String
+  prefix      String // e.g. "ppk_ab12cd34…" — safe to display
+  keyHash     String    @unique
+  permissions Json      @default("[\"traffic:ingest\"]")
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  revokedAt   DateTime?
+  createdById String?
+  createdBy   User?     @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([createdById])
+}
+
+// ───────────────────────── Failover & health ─────────────────────────
+
+model FailoverRule {
+  id                   String         @id @default(cuid())
+  name                 String
+  primaryEndpointId    String
+  backupEndpointId     String
+  primaryEndpoint      Endpoint?      @relation("failoverPrimary", fields: [primaryEndpointId], references: [id], onDelete: Cascade)
+  backupEndpoint       Endpoint?      @relation("failoverBackup", fields: [backupEndpointId], references: [id], onDelete: Cascade)
+  checkIntervalSec     Int            @default(60)
+  failureThreshold     Int            @default(3)
+  recoveryThreshold    Int            @default(2)
+  enabled              Boolean        @default(true)
+  state                FailoverState  @default(NOT_CHECKED)
+  consecutiveFailures  Int            @default(0)
+  consecutiveSuccesses Int            @default(0)
+  lastCheckedAt        DateTime?
+  lastNote             String?
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  @@index([enabled])
+}
+
+model HealthCheck {
+  id        String       @id @default(cuid())
+  target    HealthTarget
+  targetId  String
+  ok        Boolean
+  latencyMs Int?
+  error     String?
+  checkedAt DateTime     @default(now())
+
+  @@index([targetId, checkedAt])
+  @@index([checkedAt])
+}
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  at           DateTime @default(now())
+  actorId      String?
+  actor        User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  actorLabel   String
+  action       String
+  resourceType String?
+  resourceId   String?
+  ip           String?
+  metadata     Json?
+
+  @@index([at])
+  @@index([action])
+  @@index([actorId])
+}

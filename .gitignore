@@ -1,0 +1,45 @@
+# dependencies
+node_modules
+/.pnp
+.pnp.*
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# environment & secrets — NEVER commit
+.env
+.env*.local
+
+# local database & runtime artifacts (sandbox only)
+/.pgdata
+/.icu60
+/db/*.db
+*.sqlite3
+
+# logs
+dev.log
+server.log
+*.log
+
+# misc
+.DS_Store
+*.pem
+.zscripts
+/download
+
+# system/sandbox artifacts — not part of the app
+/skills
+/Caddyfile
+/mini-services
+/.zscripts
+/agent-ctx
+/worklog.md
+/download
+next-env.d.ts
