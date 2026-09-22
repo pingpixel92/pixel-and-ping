@@ -9,21 +9,24 @@ function str(name: string): string | undefined {
 
 const NODE_ENV = str('NODE_ENV') ?? 'development'
 const IS_PROD = NODE_ENV === 'production'
+// `next build` evaluates modules with NODE_ENV=production but no infra around;
+// fail-fast checks are deferred to real runtime (server start / first request).
+const IS_BUILD = process.env.NEXT_PHASE === 'phase-production-build'
 
 const DATABASE_URL = str('DATABASE_URL')
-if (IS_PROD && !DATABASE_URL) {
+if (IS_PROD && !IS_BUILD && !DATABASE_URL) {
   // Fail fast in production — a missing database URL is unrecoverable.
   throw new Error('DATABASE_URL is required in production.')
 }
 
 const SESSION_SECRET = str('SESSION_SECRET') ?? 'pixel-ping-development-session-secret'
-if (IS_PROD && SESSION_SECRET.length < 32) {
+if (IS_PROD && !IS_BUILD && SESSION_SECRET.length < 32) {
   throw new Error('SESSION_SECRET must be at least 32 characters in production.')
 }
 
 // Falls back to SESSION_SECRET when not provided (documented in .env.example).
 const ENCRYPTION_KEY = str('ENCRYPTION_KEY') ?? SESSION_SECRET
-if (IS_PROD && ENCRYPTION_KEY.length < 32) {
+if (IS_PROD && !IS_BUILD && ENCRYPTION_KEY.length < 32) {
   throw new Error('ENCRYPTION_KEY must be at least 32 characters in production.')
 }
 
