@@ -1,5 +1,7 @@
 # Pixel & Ping — Infrastructure Panel
 
+[**English**](README.md) · [فارسی](README.fa.md) · [Русский](README.ru.md) · [中文](README.zh.md)
+
 A real, production-ready infrastructure and network management panel: managed users, servers,
 endpoints, ports, real configuration builders (VLESS / VMess / Trojan / Shadowsocks), live TCP/TLS
 health checks, traffic ingestion, analytics, failover rules, audit logs,
