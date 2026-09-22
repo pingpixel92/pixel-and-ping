@@ -1,0 +1,6 @@
+# Railway (Nixpacks) build configuration.
+# Node 18 is removed from nixpkgs (EOL) and Node 20 reached EOL in April 2026,
+# so the version must be pinned explicitly. Node 22 is an active LTS release.
+[variables]
+NIXPACKS_NODE_VERSION = "22"
+NODE_VERSION = "22"
