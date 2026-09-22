@@ -9,7 +9,6 @@ export const PERMISSIONS = {
   'users:write': ['ADMIN', 'OPERATOR'],
   'infra:read': ['ADMIN', 'OPERATOR', 'VIEWER'],
   'infra:write': ['ADMIN', 'OPERATOR'],
-  'cloudflare:manage': ['ADMIN'],
   'settings:manage': ['ADMIN'],
   'apikeys:manage': ['ADMIN'],
   'audit:read': ['ADMIN'],

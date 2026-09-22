@@ -20,7 +20,6 @@ const TITLES: Array<[RegExp, string]> = [
   [/^\/endpoints/, 'Endpoints'],
   [/^\/ports/, 'Ports'],
   [/^\/configs/, 'Configs'],
-  [/^\/cloudflare/, 'Cloudflare'],
   [/^\/ip-scanner/, 'IP Scanner'],
   [/^\/traffic/, 'Traffic'],
   [/^\/analytics/, 'Analytics'],

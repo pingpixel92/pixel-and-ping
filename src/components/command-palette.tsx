@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from 'framer-motion'
 import {
-  Activity, ArrowRight, BarChart3, Bell, Cable, Cloud, Command, Cpu, FileCode2,
+  Activity, ArrowRight, BarChart3, Bell, Cable, Command, Cpu, FileCode2,
   KeyRound, LayoutDashboard, Radar, ScrollText, Server, Settings, Shuffle,
   UserPlus, Users, Waypoints,
 } from 'lucide-react'
@@ -33,7 +33,6 @@ const PAGES: PageItem[] = [
   { id: 'endpoints', label: 'Endpoints', href: '/endpoints', icon: <Waypoints size={15} /> },
   { id: 'ports', label: 'Ports', href: '/ports', icon: <Cable size={15} /> },
   { id: 'configs', label: 'Configs', href: '/configs', icon: <FileCode2 size={15} /> },
-  { id: 'cloudflare', label: 'Cloudflare', href: '/cloudflare', icon: <Cloud size={15} /> },
   { id: 'scanner', label: 'IP Scanner', href: '/ip-scanner', icon: <Radar size={15} /> },
   { id: 'traffic', label: 'Traffic', href: '/traffic', icon: <Activity size={15} /> },
   { id: 'analytics', label: 'Analytics', href: '/analytics', icon: <BarChart3 size={15} /> },

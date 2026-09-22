@@ -24,7 +24,6 @@ interface DashboardData {
     database: { state: string; latencyMs: number | null }
     api: { state: string }
     backgroundJobs: { state: string; lastRun: string | null }
-    cloudflare: { state: string }
   }
   recentLogs: Array<{ id: string; at: string; level: string; action: string; message: string }>
 }
@@ -188,7 +187,6 @@ export default function DashboardPage() {
                   state={data.health.backgroundJobs.state}
                   hint={data.health.backgroundJobs.lastRun ? `last run ${timeAgo(data.health.backgroundJobs.lastRun)}` : 'no runs yet'}
                 />
-                <HealthRow label={t('dashboard.integrations')} state={data.health.cloudflare.state} hint="Cloudflare" />
               </ul>
             ) : (
               <div className="space-y-3">

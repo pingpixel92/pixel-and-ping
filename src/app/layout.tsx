@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     default: 'Pixel & Ping — Infrastructure Panel',
     template: '%s · Pixel & Ping',
   },
-  description: 'Professional infrastructure and network management panel: users, servers, endpoints, monitoring, Cloudflare and more.',
+  description: 'Professional infrastructure and network management panel: users, servers, endpoints, monitoring and more.',
   applicationName: 'Pixel & Ping',
   robots: { index: false, follow: false },
 }

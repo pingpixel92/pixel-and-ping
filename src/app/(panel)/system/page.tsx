@@ -4,14 +4,14 @@ import { Activity, Cpu, Database, Server } from 'lucide-react'
 import { formatBytes, formatNumber, timeAgo } from '@/lib/format'
 import { useI18n } from '@/lib/i18n'
 import { useApi } from '@/lib/hooks'
-import { LinkButton, LoadingBlock, PageHeader, StatusBadge, Card, Reveal, type SemanticState } from '@/components/ui-primitives'
+import { Reveal } from '@/components/reveal'
+import { LinkButton, LoadingBlock, PageHeader, StatusBadge, Card, type SemanticState } from '@/components/ui-primitives'
 
 interface SystemHealth {
   generatedAt: string
   database: { ok: boolean; latencyMs: number | null; error?: string }
   api: { state: string; uptimeSec: number }
   backgroundJobs: { state: string; lastRun: string | null; expiryScan: string | null; sessionCleanup: string | null; failoverCheck: string | null; intervalMin: number }
-  integrations: { cloudflare: { state: string; lastVerifiedAt: string | null } }
   runtime: { node: string; rssBytes: string; env: string }
   counts: Record<string, number>
 }
@@ -51,11 +51,6 @@ export default function SystemPage() {
                 label="Background jobs"
                 state={jobs.state as 'HEALTHY' | 'DEGRADED' | 'NOT_CONFIGURED'}
                 hint={`health every ${jobs.intervalMin} min · last run ${timeAgo(jobs.lastRun)}`}
-              />
-              <ServiceRow
-                label="Cloudflare"
-                state={data.integrations.cloudflare.state as 'HEALTHY' | 'NOT_CONFIGURED'}
-                hint={data.integrations.cloudflare.lastVerifiedAt ? `verified ${timeAgo(data.integrations.cloudflare.lastVerifiedAt)}` : 'not connected'}
               />
             </ul>
           </Card>

@@ -31,7 +31,6 @@ export interface DashboardHealth {
   database: { state: 'HEALTHY' | 'UNAVAILABLE'; latencyMs: number | null }
   api: { state: 'HEALTHY' }
   backgroundJobs: { state: 'HEALTHY' | 'DEGRADED' | 'NOT_CONFIGURED'; lastRun: string | null }
-  cloudflare: { state: 'NOT_CONFIGURED' | 'HEALTHY' | 'DEGRADED' }
 }
 
 export interface DashboardData {
@@ -72,7 +71,6 @@ export async function getDashboard(): Promise<DashboardData> {
     events24h,
     panelAccounts,
     activeSessions,
-    cfAccount,
     settings,
     jobState,
     recentLogs,
@@ -94,7 +92,6 @@ export async function getDashboard(): Promise<DashboardData> {
     db.analyticsEvent.count({ where: { at: { gte: since24h } } }),
     db.user.count(),
     db.session.count({ where: { expiresAt: { gt: now } } }),
-    db.cloudflareAccount.findFirst({ select: { verified: true } }),
     getSettings(),
     getJobState(),
     db.logEntry.findMany({ orderBy: { at: 'desc' }, take: 6 }),
@@ -133,7 +130,6 @@ export async function getDashboard(): Promise<DashboardData> {
       database: { state: dbProbe.ok ? 'HEALTHY' : 'UNAVAILABLE', latencyMs: dbProbe.latencyMs },
       api: { state: 'HEALTHY' },
       backgroundJobs: { state: jobsState, lastRun: lastHealthRun?.toISOString() ?? null },
-      cloudflare: { state: cfAccount ? (cfAccount.verified ? 'HEALTHY' : 'DEGRADED') : 'NOT_CONFIGURED' },
     },
     recentLogs: recentLogs.map((l) => ({ id: l.id, at: l.at.toISOString(), level: l.level, action: l.action, message: l.message })),
   }
@@ -143,7 +139,7 @@ export async function getDashboard(): Promise<DashboardData> {
 
 export async function getSystemHealth() {
   const now = new Date()
-  const [dbProbe, settings, jobState, counts, cfAccount, nodeVersion, memUsage] = await Promise.all([
+  const [dbProbe, settings, jobState, counts, nodeVersion, memUsage] = await Promise.all([
     checkDatabase(),
     getSettings(),
     getJobState(),
@@ -153,7 +149,6 @@ export async function getSystemHealth() {
       db.trafficRecord.count(), db.session.count({ where: { expiresAt: { gt: now } } }),
       db.notification.count(), db.apiKey.count(),
     ]),
-    db.cloudflareAccount.findFirst({ select: { verified: true, lastVerifiedAt: true } }),
     Promise.resolve(process.version),
     Promise.resolve(process.memoryUsage().rss),
   ])
@@ -178,11 +173,6 @@ export async function getSystemHealth() {
     database: dbProbe,
     api: { state: 'HEALTHY' as const, uptimeSec: Math.round(process.uptime()) },
     backgroundJobs: { ...jobs, state: jobsState },
-    integrations: {
-      cloudflare: cfAccount
-        ? { state: 'HEALTHY' as const, lastVerifiedAt: cfAccount.lastVerifiedAt?.toISOString() ?? null }
-        : { state: 'NOT_CONFIGURED' as const, lastVerifiedAt: null },
-    },
     runtime: { node: nodeVersion, rssBytes: memUsage.toString(), env: process.env.NODE_ENV ?? 'development' },
     counts: {
       vpnUsers: counts[0], servers: counts[1], endpoints: counts[2], ports: counts[3],

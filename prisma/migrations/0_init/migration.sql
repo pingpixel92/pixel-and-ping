@@ -157,36 +157,6 @@ CREATE TABLE "Config" (
 );
 
 -- CreateTable
-CREATE TABLE "CloudflareAccount" (
-    "id" TEXT NOT NULL,
-    "name" TEXT NOT NULL DEFAULT 'Cloudflare',
-    "tokenCipher" TEXT NOT NULL,
-    "tokenHash" TEXT NOT NULL,
-    "accountId" TEXT,
-    "verified" BOOLEAN NOT NULL DEFAULT false,
-    "lastVerifiedAt" TIMESTAMP(3),
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "CloudflareAccount_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "CloudflareZone" (
-    "id" TEXT NOT NULL,
-    "zoneId" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "status" TEXT NOT NULL,
-    "accountId" TEXT NOT NULL,
-    "records" JSONB,
-    "fetchedAt" TIMESTAMP(3),
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "CloudflareZone_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "TrafficRecord" (
     "id" TEXT NOT NULL,
     "at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -374,15 +344,6 @@ CREATE INDEX "VpnUser_serverId_idx" ON "VpnUser"("serverId");
 CREATE INDEX "Config_vpnUserId_idx" ON "Config"("vpnUserId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "CloudflareAccount_tokenHash_key" ON "CloudflareAccount"("tokenHash");
-
--- CreateIndex
-CREATE UNIQUE INDEX "CloudflareZone_zoneId_key" ON "CloudflareZone"("zoneId");
-
--- CreateIndex
-CREATE INDEX "CloudflareZone_accountId_idx" ON "CloudflareZone"("accountId");
-
--- CreateIndex
 CREATE INDEX "TrafficRecord_at_idx" ON "TrafficRecord"("at");
 
 -- CreateIndex
@@ -462,9 +423,6 @@ ALTER TABLE "VpnUser" ADD CONSTRAINT "VpnUser_portId_fkey" FOREIGN KEY ("portId"
 
 -- AddForeignKey
 ALTER TABLE "Config" ADD CONSTRAINT "Config_vpnUserId_fkey" FOREIGN KEY ("vpnUserId") REFERENCES "VpnUser"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "CloudflareZone" ADD CONSTRAINT "CloudflareZone_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "CloudflareAccount"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "TrafficRecord" ADD CONSTRAINT "TrafficRecord_vpnUserId_fkey" FOREIGN KEY ("vpnUserId") REFERENCES "VpnUser"("id") ON DELETE SET NULL ON UPDATE CASCADE;

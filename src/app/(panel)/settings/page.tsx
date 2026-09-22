@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { AlertTriangle, Cloud, KeyRound, Palette, ShieldCheck, SlidersHorizontal, UserRound } from 'lucide-react'
+import { AlertTriangle, KeyRound, Palette, ShieldCheck, SlidersHorizontal, UserRound } from 'lucide-react'
 import { api, ApiClientError } from '@/lib/api-client'
 import { formatDateTime } from '@/lib/format'
 import { useI18n, LOCALES, type Locale } from '@/lib/i18n'
@@ -28,7 +28,6 @@ const TABS = [
   { id: 'appearance', label: 'Appearance' },
   { id: 'notifications', label: 'Notifications' },
   { id: 'system', label: 'System' },
-  { id: 'integrations', label: 'Integrations' },
   { id: 'danger', label: 'Danger Zone' },
 ]
 
@@ -251,7 +250,7 @@ export default function SettingsPage() {
               />
               <SettingToggle
                 label="Integration alerts"
-                hint="Cloudflare connection events."
+                hint="Events from external integrations."
                 checked={s.notify.integration}
                 disabled={!canManage}
                 onChange={(v) => void saveSettings({ notify: { integration: v } })}
@@ -313,23 +312,6 @@ export default function SettingsPage() {
               </Field>
               {!canManage && <p className="text-xs text-ink-soft">Only administrators can change system parameters.</p>}
             </div>
-          </Card>
-        </Reveal>
-      )}
-
-      {/* INTEGRATIONS */}
-      {tab === 'integrations' && (
-        <Reveal>
-          <Card className="max-w-xl p-5">
-            <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-ink">
-              <Cloud size={15} className="text-brand" /> Cloudflare
-            </h2>
-            <p className="text-sm text-ink-soft">
-              Manage the Cloudflare connection from its dedicated page — token verification, zones and DNS records.
-            </p>
-            <Button variant="secondary" size="sm" className="mt-4" onClick={() => (window.location.href = '/cloudflare')}>
-              Open Cloudflare settings
-            </Button>
           </Card>
         </Reveal>
       )}

@@ -1,7 +1,7 @@
 'use client'
 
 import {
-  Activity, BarChart3, Bell, Cable, ChevronLeft, Cloud, Cpu, FileCode2, KeyRound,
+  Activity, BarChart3, Bell, Cable, ChevronLeft, Cpu, FileCode2, KeyRound,
   LayoutDashboard, Radar, ScrollText, Server, Settings, Shuffle, UserPlus,
   Users, Waypoints, X,
 } from 'lucide-react'
@@ -44,7 +44,6 @@ export const NAV: NavGroup[] = [
   {
     labelKey: 'nav.group.network',
     items: [
-      { href: '/cloudflare', labelKey: 'nav.cloudflare', icon: <Cloud size={17} /> },
       { href: '/ip-scanner', labelKey: 'nav.scanner', icon: <Radar size={17} /> },
       { href: '/traffic', labelKey: 'nav.traffic', icon: <Activity size={17} /> },
       { href: '/analytics', labelKey: 'nav.analytics', icon: <BarChart3 size={17} /> },

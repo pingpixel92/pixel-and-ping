@@ -10,7 +10,6 @@ export const zh: Partial<Record<keyof typeof en, string>> = {
   'nav.endpoints': '端点',
   'nav.ports': '端口',
   'nav.configs': '配置',
-  'nav.cloudflare': 'Cloudflare',
   'nav.scanner': 'IP 扫描',
   'nav.traffic': '流量',
   'nav.analytics': '分析',

@@ -70,7 +70,7 @@ export default function LoginPage() {
             Every pixel of your infrastructure, one ping away.
           </h1>
           <p className="mt-4 max-w-md text-sm leading-relaxed text-white/60">
-            Manage users, servers, endpoints, traffic and Cloudflare — with real monitoring,
+            Manage users, servers, endpoints and traffic — with real monitoring,
             real health checks and zero fake numbers.
           </p>
           <div className="mt-8 flex items-center gap-6">

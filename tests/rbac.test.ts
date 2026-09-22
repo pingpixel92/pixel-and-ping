@@ -6,7 +6,7 @@ import type { BuildConfigInput } from '../src/lib/services/providers'
 describe('RBAC matrix', () => {
   it('grants admins every permission', () => {
     expect(can('ADMIN', 'users:write')).toBe(true)
-    expect(can('ADMIN', 'cloudflare:manage')).toBe(true)
+    expect(can('ADMIN', 'settings:manage')).toBe(true)
     expect(can('ADMIN', 'danger:execute')).toBe(true)
     expect(can('ADMIN', 'audit:read')).toBe(true)
   })

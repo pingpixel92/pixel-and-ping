@@ -84,7 +84,7 @@ export default function PortsPage() {
     try {
       const res = await api<{ ok: boolean; latencyMs: number | null; error: string | null }>(`/api/ports/${row.id}/test`, { method: 'POST' })
       if (res.ok) toast.success(`Port ${row.number} reachable`, `Latency ${res.latencyMs} ms.`)
-      else toast.error(`Port ${row.number} check failed`, res.error ?? (res as { error?: string }).error || 'Unreachable.')
+      else toast.error(`Port ${row.number} check failed`, res.error ?? 'Unreachable.')
       await reload()
     } catch (err) {
       toast.error('Test failed', err instanceof ApiClientError ? err.message : undefined)

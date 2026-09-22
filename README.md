@@ -2,8 +2,8 @@
 
 A real, production-ready infrastructure and network management panel: managed users, servers,
 endpoints, ports, real configuration builders (VLESS / VMess / Trojan / Shadowsocks), live TCP/TLS
-health checks, Cloudflare integration, traffic ingestion, analytics, failover rules, audit logs,
-API keys and role-based access — backed by PostgreSQL.
+health checks, traffic ingestion, analytics, failover rules, audit logs,
+API keys and role-based access — backed by PostgreSQL. Deployed on Railway.
 
 **No fake data.** Every number on the dashboard comes from a database query. A fresh install
 shows `0` everywhere and walks you through first-run setup.
@@ -31,7 +31,7 @@ src/app/                 # frontend pages (App Router)
 src/app/api/             # backend REST API (route handlers)
 src/components/          # design system + app shell components
 src/lib/                 # auth, rbac, crypto, validation, services (business logic)
-src/lib/services/        # health checks, providers, Cloudflare, scanner, stats, jobs
+src/lib/services/        # health checks, providers, scanner, stats, jobs
 tests/                   # vitest unit tests
 ```
 
@@ -77,7 +77,6 @@ tests/                   # vitest unit tests
 - [ ] `/setup` created your admin and redirected to the dashboard
 - [ ] Dashboard shows real zeros (no users/servers yet)
 - [ ] Add a server → press **Test connection** → the status reflects a **real TCP probe**
-- [ ] Optional: connect Cloudflare on `/cloudflare`
 
 ---
 
@@ -127,15 +126,13 @@ All responses use a consistent envelope:
 
 ### Panel data
 - `GET /api/dashboard` — real aggregate stats + health
-- `GET /api/system/health` — database/API/jobs/integrations report
+- `GET /api/system/health` — database/API/jobs report
 - `GET|POST /api/users`, `GET|PATCH|DELETE /api/users/:id`
 - `GET|POST /api/users/:id/config` — fetch / regenerate the proxy config
 - `GET|POST /api/servers`, `PATCH|DELETE /api/servers/:id`, `POST /api/servers/:id/test`, `POST /api/servers/test-all`
 - `GET|POST /api/endpoints`, `PATCH|DELETE /api/endpoints/:id`, `POST /api/endpoints/:id/test`
 - `GET|POST /api/ports`, `PATCH|DELETE /api/ports/:id`, `POST /api/ports/:id/test`
 - `GET|POST /api/configs`, `DELETE /api/configs/:id`, `GET /api/configs/providers`
-- `GET /api/cloudflare`, `POST /api/cloudflare/connect`, `DELETE /api/cloudflare/disconnect`,
-  `GET /api/cloudflare/zones`, `GET /api/cloudflare/zones/:zoneId` (live DNS records)
 - `POST /api/scanner` — controlled DNS/TCP/HTTP diagnostics (rate limited)
 - `GET /api/traffic?range=24h|7d|30d|all`
 - `GET /api/analytics?range=…`
@@ -167,7 +164,7 @@ Traffic and analytics pages stay empty until real records exist — by design.
 
 | Role     | Capabilities                                                                 |
 | -------- | ---------------------------------------------------------------------------- |
-| ADMIN    | Everything, including settings, API keys, Cloudflare, audit logs, danger zone |
+| ADMIN    | Everything, including settings, API keys, audit logs, danger zone |
 | OPERATOR | Manage users/servers/endpoints/ports/configs/scanner/failover                 |
 | VIEWER   | Read-only dashboards and lists                                                |
 
@@ -179,7 +176,6 @@ Permission checks run on the backend (`src/lib/rbac.ts` + route guards). The UI 
 - Sessions: 256-bit random tokens, only SHA-256 hashes stored; HttpOnly + SameSite cookies;
   `Secure` in production; DB-side expiry + cleanup job.
 - CSRF: mutating API requests require same-origin; cookies are SameSite=Lax.
-- Cloudflare tokens: AES-256-GCM encrypted at rest, never returned by the API, redacted in logs.
 - API keys: stored as SHA-256 hashes; the full secret is displayed exactly once.
 - Rate limiting: login (per-IP + per-identifier), scanner, health tests, ingest, general API.
 - Structured logging with automatic secret redaction. No stack traces reach clients.

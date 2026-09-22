@@ -10,7 +10,6 @@ export const ru: Partial<Record<keyof typeof en, string>> = {
   'nav.endpoints': 'Эндпоинты',
   'nav.ports': 'Порты',
   'nav.configs': 'Конфиги',
-  'nav.cloudflare': 'Cloudflare',
   'nav.scanner': 'IP-сканер',
   'nav.traffic': 'Трафик',
   'nav.analytics': 'Аналитика',

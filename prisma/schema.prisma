@@ -229,36 +229,6 @@ model Config {
   @@index([vpnUserId])
 }
 
-// ───────────────────────── Cloudflare ─────────────────────────
-
-model CloudflareAccount {
-  id             String           @id @default(cuid())
-  name           String           @default("Cloudflare")
-  tokenCipher    String           // AES-256-GCM encrypted API token
-  tokenHash      String           @unique // sha256 — duplicate-token detection only
-  accountId      String?
-  verified       Boolean          @default(false)
-  lastVerifiedAt DateTime?
-  zones          CloudflareZone[]
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-}
-
-model CloudflareZone {
-  id        String            @id @default(cuid())
-  zoneId    String            @unique
-  name      String
-  status    String
-  accountId String
-  account   CloudflareAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  records   Json?
-  fetchedAt DateTime?
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
-
-  @@index([accountId])
-}
-
 // ───────────────────────── Traffic & analytics ─────────────────────────
 
 model TrafficRecord {

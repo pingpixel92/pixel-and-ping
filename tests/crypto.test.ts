@@ -33,8 +33,8 @@ describe('password hashing (scrypt)', () => {
 })
 
 describe('AES-256-GCM secret encryption', () => {
-  it('round-trips a Cloudflare token', () => {
-    const token = 'cf-token-abcdef0123456789'
+  it('round-trips a provider secret', () => {
+    const token = 'secret-token-abcdef0123456789'
     const cipher = encryptSecret(token)
     expect(cipher.startsWith('v1.')).toBe(true)
     expect(cipher).not.toContain(token)
