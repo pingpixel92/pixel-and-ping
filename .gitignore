@@ -43,3 +43,4 @@ server.log
 /worklog.md
 /download
 next-env.d.ts
+*.tsbuildinfo

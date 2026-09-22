@@ -28,6 +28,11 @@ interface MeContextValue {
 
 const MeContext = createContext<MeContextValue | null>(null)
 
+/** Best-effort client-side removal of an invalid session cookie (expiry, DB reset, secret rotation). */
+function clearStaleSession() {
+  document.cookie = 'pp_session=; Max-Age=0; path=/; SameSite=Lax'
+}
+
 export function useMe(): MeContextValue {
   const ctx = useContext(MeContext)
   if (!ctx) throw new Error('useMe must be used inside AuthGate')
@@ -46,6 +51,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
     try {
       const data = await api<{ user: Me | null; unreadCount: number }>('/api/me')
       if (!data.user) {
+        clearStaleSession()
         router.replace('/login')
         return
       }
@@ -55,6 +61,8 @@ export function AuthGate({ children }: { children: ReactNode }) {
     } catch (err) {
       // /api/me is in SKIP_REDIRECT — handle 401 manually.
       if (err instanceof Error && 'status' in err && (err as { status: number }).status === 401) {
+        // Drop the invalid cookie so edge middleware stops bouncing /login → /dashboard.
+        clearStaleSession()
         router.replace('/login')
         return
       }

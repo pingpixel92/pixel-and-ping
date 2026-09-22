@@ -2,6 +2,8 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { en, type TranslationKey } from './en'
+
+export type { TranslationKey } from './en'
 import { fa } from './fa'
 import { ru } from './ru'
 import { zh } from './zh'

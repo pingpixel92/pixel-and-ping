@@ -87,6 +87,19 @@ export function sessionCookieOptions(expires: Date, maxAgeSec: number) {
   }
 }
 
+/** Mirrors sessionCookieOptions but expires the cookie immediately — lets the browser drop invalid sessions. */
+export function clearSessionCookieOptions() {
+  const epoch = new Date(0)
+  return {
+    httpOnly: true,
+    sameSite: 'lax' as const,
+    secure: env.IS_PROD,
+    path: '/',
+    expires: epoch,
+    maxAge: 0,
+  }
+}
+
 export function publicUser(u: {
   id: string
   email: string

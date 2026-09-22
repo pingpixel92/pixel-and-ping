@@ -1,34 +1,35 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { Bell, CheckCheck, LogOut, Menu, PanelLeft, Search, UserRound } from 'lucide-react'
+import { Bell, Check, CheckCheck, Globe, LogOut, Menu, PanelLeft, Search, UserRound } from 'lucide-react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import { api } from '@/lib/api-client'
 import { timeAgo } from '@/lib/format'
+import { useI18n, LOCALES, type TranslationKey } from '@/lib/i18n'
 import { springSoft } from '../reveal'
 import { Badge, IconButton } from '../ui-primitives'
 import { useMe } from './auth-gate'
 
-const TITLES: Array<[RegExp, string]> = [
-  [/^\/dashboard/, 'Dashboard'],
-  [/^\/users\/create/, 'Create User'],
-  [/^\/users\/[^/]+/, 'User Details'],
-  [/^\/users/, 'Users'],
-  [/^\/servers/, 'Servers'],
-  [/^\/endpoints/, 'Endpoints'],
-  [/^\/ports/, 'Ports'],
-  [/^\/configs/, 'Configs'],
-  [/^\/ip-scanner/, 'IP Scanner'],
-  [/^\/traffic/, 'Traffic'],
-  [/^\/analytics/, 'Analytics'],
-  [/^\/failover/, 'Failover'],
-  [/^\/logs/, 'Logs'],
-  [/^\/notifications/, 'Notifications'],
-  [/^\/settings/, 'Settings'],
-  [/^\/api-keys/, 'API Keys'],
-  [/^\/system/, 'System'],
+const TITLES: Array<[RegExp, TranslationKey]> = [
+  [/^\/dashboard/, 'nav.dashboard'],
+  [/^\/users\/create/, 'nav.createUser'],
+  [/^\/users\/[^/]+/, 'nav.userDetails'],
+  [/^\/users/, 'nav.users'],
+  [/^\/servers/, 'nav.servers'],
+  [/^\/endpoints/, 'nav.endpoints'],
+  [/^\/ports/, 'nav.ports'],
+  [/^\/configs/, 'nav.configs'],
+  [/^\/ip-scanner/, 'nav.scanner'],
+  [/^\/traffic/, 'nav.traffic'],
+  [/^\/analytics/, 'nav.analytics'],
+  [/^\/failover/, 'nav.failover'],
+  [/^\/logs/, 'nav.logs'],
+  [/^\/notifications/, 'nav.notifications'],
+  [/^\/settings/, 'nav.settings'],
+  [/^\/api-keys/, 'nav.apiKeys'],
+  [/^\/system/, 'nav.system'],
 ]
 
 interface NotificationItem {
@@ -43,20 +44,24 @@ interface NotificationItem {
 export function Topbar({ onMenu, onToggleCollapse }: { onMenu: () => void; onToggleCollapse: () => void }) {
   const router = useRouter()
   const pathname = usePathname()
+  const { t, locale, setLocale } = useI18n()
   const { user, unreadCount, setUnreadCount } = useMe()
   const [notifOpen, setNotifOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
+  const [langOpen, setLangOpen] = useState(false)
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const notifRef = useRef<HTMLDivElement>(null)
   const profileRef = useRef<HTMLDivElement>(null)
+  const langRef = useRef<HTMLDivElement>(null)
 
-  const title = TITLES.find(([re]) => re.test(pathname))?.[1] ?? 'Panel'
+  const title = t(TITLES.find(([re]) => re.test(pathname))?.[1] ?? 'app.name')
 
   // Close popovers on outside click.
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) setNotifOpen(false)
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) setProfileOpen(false)
+      if (langRef.current && !langRef.current.contains(e.target as Node)) setLangOpen(false)
     }
     document.addEventListener('mousedown', onClick)
     return () => document.removeEventListener('mousedown', onClick)
@@ -115,7 +120,7 @@ export function Topbar({ onMenu, onToggleCollapse }: { onMenu: () => void; onTog
         aria-label="Open command palette (Ctrl+K)"
       >
         <Search size={15} />
-        <span className="flex-1 text-start">Search…</span>
+        <span className="flex-1 text-start">{t('common.search')}…</span>
         <kbd className="mono rounded border border-hairline bg-white px-1.5 py-0.5 text-[10px]">⌘K</kbd>
       </button>
       <IconButton label="Search (Ctrl+K)" className="md:hidden" onClick={() => {
@@ -124,6 +129,44 @@ export function Topbar({ onMenu, onToggleCollapse }: { onMenu: () => void; onTog
       }}>
         <Search size={18} />
       </IconButton>
+
+      {/* Language quick switcher — en / fa (RTL) / ru / zh. */}
+      <div className="relative" ref={langRef}>
+        <IconButton label={t('language.label')} onClick={() => setLangOpen((v) => !v)} active={langOpen}>
+          <Globe size={17} />
+        </IconButton>
+        <AnimatePresence>
+          {langOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -6, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -4, transition: { duration: 0.12 } }}
+              transition={springSoft}
+              className="card absolute end-0 top-11 z-50 w-44 overflow-hidden p-1.5 shadow-[var(--shadow-pop)]"
+              role="menu"
+              aria-label={t('language.label')}
+            >
+              {LOCALES.map((l) => (
+                <button
+                  key={l.id}
+                  role="menuitem"
+                  onClick={() => {
+                    setLocale(l.id)
+                    setLangOpen(false)
+                  }}
+                  aria-current={locale === l.id}
+                  className={`flex w-full items-center justify-between rounded-[8px] px-3 py-2 text-sm transition-colors hover:bg-surface ${
+                    locale === l.id ? 'font-semibold text-brand' : 'text-ink'
+                  }`}
+                >
+                  <span>{l.label}</span>
+                  {locale === l.id && <Check size={14} />}
+                </button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       {/* Notifications */}
       <div className="relative" ref={notifRef}>
@@ -147,16 +190,16 @@ export function Topbar({ onMenu, onToggleCollapse }: { onMenu: () => void; onTog
               aria-label="Notifications"
             >
               <div className="flex items-center justify-between border-b border-hairline px-4 py-3">
-                <p className="text-sm font-semibold text-ink">Notifications</p>
+                <p className="text-sm font-semibold text-ink">{t('notifications.title')}</p>
                 <Link href="/notifications" onClick={() => setNotifOpen(false)} className="text-xs font-medium text-brand hover:underline">
-                  View all
+                  {t('common.viewAll')}
                 </Link>
               </div>
               <div className="max-h-[320px] overflow-y-auto">
                 {notifications.length === 0 ? (
                   <div className="flex flex-col items-center gap-1 px-4 py-10 text-center">
                     <CheckCheck size={20} className="text-ghost" />
-                    <p className="text-sm text-ink-soft">You are all caught up.</p>
+                    <p className="text-sm text-ink-soft">{t('notifications.allCaughtUp')}</p>
                   </div>
                 ) : (
                   notifications.map((n) => (
@@ -214,14 +257,14 @@ export function Topbar({ onMenu, onToggleCollapse }: { onMenu: () => void; onTog
                 role="menuitem"
                 className="flex w-full items-center gap-2.5 rounded-[8px] px-3 py-2 text-sm text-ink transition-colors hover:bg-surface"
               >
-                <UserRound size={15} /> Account settings
+                <UserRound size={15} /> {t('settings.account')}
               </Link>
               <button
                 onClick={logout}
                 role="menuitem"
                 className="flex w-full items-center gap-2.5 rounded-[8px] px-3 py-2 text-sm text-danger transition-colors hover:bg-[rgba(220,38,38,0.06)]"
               >
-                <LogOut size={15} /> Sign out
+                <LogOut size={15} /> {t('common.logout')}
               </button>
             </motion.div>
           )}

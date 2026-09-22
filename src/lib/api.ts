@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { ZodError } from 'zod'
 import { db } from './db'
-import { getSessionUser, type SessionUser } from './auth'
+import { getSessionUser, clearSessionCookieOptions, SESSION_COOKIE, type SessionUser } from './auth'
 import { logger } from './logger'
 import { getIp, rateLimit } from './rate-limit'
 import type { Role } from '@prisma/client'
@@ -142,7 +142,13 @@ export function withAuth<P = Record<string, never>>(
       if (!generalRateOk(req)) return fail(429, 'RATE_LIMITED', 'Too many requests. Slow down.')
       if (!sameOriginOk(req)) return fail(403, 'CSRF_BLOCKED', 'Cross-origin request blocked.')
       const auth = await getSessionUser(req)
-      if (!auth) return fail(401, 'UNAUTHENTICATED', 'Authentication required.')
+      if (!auth) {
+        // Invalid/expired session: expire the stale cookie so edge middleware
+        // stops treating the browser as signed in (unblocks /login and /setup).
+        const res = fail(401, 'UNAUTHENTICATED', 'Authentication required.')
+        res.cookies.set(SESSION_COOKIE, '', clearSessionCookieOptions())
+        return res
+      }
       if (opts.roles && !opts.roles.includes(auth.role)) {
         return fail(403, 'FORBIDDEN', 'You do not have permission to perform this action.')
       }

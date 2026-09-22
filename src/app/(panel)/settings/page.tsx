@@ -194,10 +194,10 @@ export default function SettingsPage() {
         <Reveal>
           <Card className="max-w-xl p-5">
             <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-ink">
-              <Palette size={15} className="text-brand" /> Appearance & language
+              <Palette size={15} className="text-brand" /> {t('settings.appearance')}
             </h2>
             <div className="space-y-4">
-              <Field label="Language (default English)" htmlFor="set-locale" hint="Persian switches the panel to RTL.">
+              <Field label={t('language.label')} htmlFor="set-locale" hint={t('settings.localeHint')}>
                 <Select
                   id="set-locale"
                   value={locale}
